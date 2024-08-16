@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Sensor Data</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@latest/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Real-Time Sensor Data</h1>
+        <div id="temperature">Temperature: Loading...</div>
+        <div id="humidity">Humidity: Loading...</div>
+        <div id="mqValue">MQ Sensor Value: Loading...</div>
+        <canvas id="temperatureChart" width="400" height="200"></canvas>
+        <canvas id="humidityChart" width="400" height="200"></canvas>
+        <canvas id="mqChart" width="400" height="200"></canvas>
+    </div>
+    <script>
+        const socket = io();
+
+        // Chart.js data setup
+        const temperatureData = {
+            labels: [],
+            datasets: [{
+                label: 'Temperature (°C)',
+                data: [],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                fill: true,
+            }]
+        };
+
+        const humidityData = {
+            labels: [],
+            datasets: [{
+                label: 'Humidity (%)',
+                data: [],
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                fill: true,
+            }]
+        };
+
+        const mqData = {
+            labels: [],
+            datasets: [{
+                label: 'MQ Sensor Value',
+                data: [],
+                borderColor: 'rgba(255, 159, 64, 1)',
+                backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                fill: true,
+            }]
+        };
+
+        // Initialize charts after DOM content is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const temperatureChart = new Chart(document.getElementById('temperatureChart'), {
+                type: 'line',
+                data: temperatureData,
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'second' },
+                        },
+                        y: { beginAtZero: true },
+                    },
+                },
+            });
+
+            const humidityChart = new Chart(document.getElementById('humidityChart'), {
+                type: 'line',
+                data: humidityData,
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'second' },
+                        },
+                        y: { beginAtZero: true },
+                    },
+                },
+            });
+
+            const mqChart = new Chart(document.getElementById('mqChart'), {
+                type: 'line',
+                data: mqData,
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'second' },
+                        },
+                        y: { beginAtZero: true },
+                    },
+                },
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+
+            socket.on('initial_data', (data) => {
+                const currentTime = new Date();
+                document.getElementById('temperature').innerText = `Temperature: ${data.temperature} °C`;
+                document.getElementById('humidity').innerText = `Humidity: ${data.humidity} %`;
+                document.getElementById('mqValue').innerText = `MQ Sensor Value: ${data.mq_value}`;
+
+                // Update chart data
+                temperatureData.labels.push(currentTime);
+                temperatureData.datasets[0].data.push(data.temperature);
+                temperatureChart.update();
+
+                humidityData.labels.push(currentTime);
+                humidityData.datasets[0].data.push(data.humidity);
+                humidityChart.update();
+
+                mqData.labels.push(currentTime);
+                mqData.datasets[0].data.push(data.mq_value);
+                mqChart.update();
+            });
+
+            socket.on('sensor_update', (data) => {
+                const currentTime = new Date();
+                document.getElementById('temperature').innerText = `Temperature: ${data.temperature} °C`;
+                document.getElementById('humidity').innerText = `Humidity: ${data.humidity} %`;
+                document.getElementById('mqValue').innerText = `MQ Sensor Value: ${data.mq_value}`;
+
+                // Update chart data
+                temperatureData.labels.push(currentTime);
+                temperatureData.datasets[0].data.push(data.temperature);
+                temperatureChart.update();
+
+                humidityData.labels.push(currentTime);
+                humidityData.datasets[0].data.push(data.humidity);
+                humidityChart.update();
+
+                mqData.labels.push(currentTime);
+                mqData.datasets[0].data.push(data.mq_value);
+                mqChart.update();
+            });
+        });
+    </script>
+</body>
+</html>
+
