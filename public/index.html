@@ -56,8 +56,33 @@
             }]
         };
 
+        // Save chart data to local storage
+        const saveToLocalStorage = () => {
+            localStorage.setItem('temperatureData', JSON.stringify(temperatureData));
+            localStorage.setItem('humidityData', JSON.stringify(humidityData));
+            localStorage.setItem('mqData', JSON.stringify(mqData));
+        };
+
+        // Load chart data from local storage
+        const loadFromLocalStorage = () => {
+            const savedTemperatureData = JSON.parse(localStorage.getItem('temperatureData'));
+            const savedHumidityData = JSON.parse(localStorage.getItem('humidityData'));
+            const savedMqData = JSON.parse(localStorage.getItem('mqData'));
+
+            if (savedTemperatureData && savedHumidityData && savedMqData) {
+                temperatureData.labels = savedTemperatureData.labels || [];
+                temperatureData.datasets[0].data = savedTemperatureData.datasets[0].data || [];
+                humidityData.labels = savedHumidityData.labels || [];
+                humidityData.datasets[0].data = savedHumidityData.datasets[0].data || [];
+                mqData.labels = savedMqData.labels || [];
+                mqData.datasets[0].data = savedMqData.datasets[0].data || [];
+            }
+        };
+
         // Initialize charts after DOM content is loaded
         document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+
             const temperatureChart = new Chart(document.getElementById('temperatureChart'), {
                 type: 'line',
                 data: temperatureData,
@@ -100,6 +125,7 @@
                 },
             });
 
+            // Update charts and UI when receiving data
             socket.on('connect', () => {
                 console.log('Connected to server');
             });
@@ -122,6 +148,8 @@
                 mqData.labels.push(currentTime);
                 mqData.datasets[0].data.push(data.mq_value);
                 mqChart.update();
+
+                saveToLocalStorage(); // Save the updated data
             });
 
             socket.on('sensor_update', (data) => {
@@ -142,9 +170,10 @@
                 mqData.labels.push(currentTime);
                 mqData.datasets[0].data.push(data.mq_value);
                 mqChart.update();
+
+                saveToLocalStorage(); // Save the updated data
             });
         });
     </script>
 </body>
 </html>
-
